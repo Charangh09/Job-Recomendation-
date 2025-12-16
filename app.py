@@ -312,7 +312,7 @@ def main():
                         query_text = " | ".join(query_parts)
                         
                         # Get recommendations using retriever
-                        assessments = recommender.search(query_text, k=5)
+                        assessments = recommender.search(query_text, top_k=5)
                         
                         # Display results
                         st.markdown("---")
@@ -392,7 +392,7 @@ def main():
             with st.spinner("Searching catalog..."):
                 try:
                     # Get recommendations using semantic search
-                    assessments = recommender.search(search_query, k=10)
+                    assessments = recommender.search(search_query, top_k=10)
                     
                     if assessments:
                         st.markdown(f"### 📋 Found {len(assessments)} matching assessments")
