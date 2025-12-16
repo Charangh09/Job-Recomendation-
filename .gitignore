@@ -13,12 +13,6 @@ ENV/
 # Environment variables
 .env
 
-# Data directories
-data/raw/
-data/processed/
-data/vector_db/
-data/evaluation/
-
 # IDE
 .vscode/
 .idea/
