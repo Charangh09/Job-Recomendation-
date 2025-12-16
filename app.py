@@ -144,12 +144,7 @@ def load_recommender():
         st.error(f"Error loading recommendation system: {str(e)}")
         st.error("Full error details:")
         st.code(traceback.format_exc())
-        st.info("Please ensure:\n"
-                "1. Vector database exists in data/vector_db/")
-                "2. Data pipeline has been run:\n"
-                "   - python src/scraper/scrape_shl.py\n"
-                "   - python src/scraper/parser.py\n"
-                "   - python src/embeddings/build_vector_db.py")
+        st.info("Please ensure vector database exists in data/vector_db/")
         return None
 
 
