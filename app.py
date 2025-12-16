@@ -18,7 +18,7 @@ load_dotenv(Path(__file__).parent / ".env")
 # Add src to path
 sys.path.append(str(Path(__file__).parent))
 
-from src.recommendation.recommender import AssessmentRecommender
+from src.retrieval.retriever import AssessmentRetriever
 
 # Page configuration
 st.set_page_config(
@@ -118,9 +118,9 @@ def load_recommender():
         
         # Check if vector DB is empty and rebuild if needed
         try:
-            recommender = AssessmentRecommender()
+            retriever = AssessmentRetriever()
             # Try to query to see if DB has data
-            test_results = recommender.retriever.collection.count()
+            test_results = retriever.collection.count()
             if test_results == 0:
                 st.info("📊 Building vector database... This may take a minute")
                 builder = VectorDBBuilder()
@@ -137,17 +137,15 @@ def load_recommender():
             builder.build(assessments)
             st.success("✅ Vector database initialized successfully!")
         
-        recommender = AssessmentRecommender()
-        if recommender.client is None:
-            st.warning("⚠️ OpenAI API key not configured. LLM features will be disabled.")
-        return recommender
+        retriever = AssessmentRetriever()
+        return retriever
     except Exception as e:
         import traceback
         st.error(f"Error loading recommendation system: {str(e)}")
         st.error("Full error details:")
         st.code(traceback.format_exc())
         st.info("Please ensure:\n"
-                "1. .env file exists with OPENAI_API_KEY\n"
+                "1. Vector database exists in data/vector_db/")
                 "2. Data pipeline has been run:\n"
                 "   - python src/scraper/scrape_shl.py\n"
                 "   - python src/scraper/parser.py\n"
@@ -307,14 +305,19 @@ def main():
                 
                 with st.spinner("🔍 Analyzing requirements and retrieving assessments..."):
                     try:
-                        # Generate recommendations
-                        result = recommender.recommend(
-                            job_title=job_title,
-                            skills=skills,
-                            experience_level=experience_level,
-                            additional_context=additional_context if additional_context else None,
-                            use_llm=use_llm
-                        )
+                        # Build query from inputs
+                        query_parts = [f"Job Title: {job_title}"]
+                        if skills:
+                            query_parts.append(f"Required Skills: {skills}")
+                        if experience_level:
+                            query_parts.append(f"Experience Level: {experience_level}")
+                        if additional_context:
+                            query_parts.append(f"Additional Context: {additional_context}")
+                        
+                        query_text = " | ".join(query_parts)
+                        
+                        # Get recommendations using retriever
+                        assessments = recommender.search(query_text, k=5)
                         
                         # Display results
                         st.markdown("---")
@@ -323,16 +326,16 @@ def main():
                         # Summary
                         col1, col2, col3 = st.columns(3)
                         with col1:
-                            st.metric("Assessments Found", result['retrieval_count'])
+                            st.metric("Assessments Found", len(assessments))
                         with col2:
-                            st.metric("Job Title", result['job_title'])
+                            st.metric("Job Title", job_title)
                         with col3:
-                            st.metric("Experience Level", result['experience_level'])
+                            st.metric("Experience Level", experience_level)
 
                         # Balanced Recommendation summary (K vs P)
                         tech_count = 0
                         beh_count = 0
-                        for a in result.get('retrieved_assessments', []):
+                        for a in assessments:
                             cat = (a.get('category') or '').lower()
                             if 'personality' in cat or 'behavior' in cat:
                                 beh_count += 1
@@ -341,23 +344,14 @@ def main():
                         balanced_text = "✔ Balanced across skill domains" if tech_count and beh_count else "⚠ Consider including both technical and behavioral tests"
                         st.info(f"Recommendation Summary\nTechnical Tests: {tech_count} | Behavioral Tests: {beh_count}\n{balanced_text}")
                         
-                        # AI-generated recommendations
-                        if result.get('llm_recommendations'):
-                            st.markdown("### 🤖 AI-Generated Recommendations")
-                            st.markdown(f"""
-                            <div class="recommendation-box">
-                            {result['llm_recommendations'].replace(chr(10), '<br>')}
-                            </div>
-                            """, unsafe_allow_html=True)
-                        
                         # Retrieved assessments (cards only, with normalized display scores)
                         st.markdown("### 📋 Detailed Assessment Information")
-                        if result['retrieved_assessments']:
-                            scores = [a.get('similarity_score', 0.0) for a in result['retrieved_assessments']]
+                        if assessments:
+                            scores = [a.get('similarity_score', 0.0) for a in assessments]
                             min_s, max_s = (min(scores), max(scores)) if scores else (0.0, 0.0)
                             span = max_s - min_s
                             normalized = []
-                            for a in result['retrieved_assessments']:
+                            for a in assessments:
                                 s = a.get('similarity_score', 0.0)
                                 if span > 1e-6:
                                     disp = (s - min_s) / span  # 0..1 relative within this result set
@@ -371,9 +365,9 @@ def main():
                             st.warning("No assessments found matching your criteria. Try adjusting your requirements.")
                         
                         # Download option
-                        if result['retrieved_assessments']:
+                        if assessments:
                             st.markdown("---")
-                            df = pd.DataFrame(result['retrieved_assessments'])
+                            df = pd.DataFrame(assessments)
                             csv = df.to_csv(index=False)
                             st.download_button(
                                 label="📥 Download Recommendations (CSV)",
@@ -403,19 +397,7 @@ def main():
             with st.spinner("Searching catalog..."):
                 try:
                     # Get recommendations using semantic search
-                    results = recommender.recommend_simple(
-                        query=search_query,
-                        use_llm=False
-                    )
-                    
-                    # Extract assessments from the result
-                    if isinstance(results, dict):
-                        # recommend_simple() returns a dict with 'retrieved_assessments' key
-                        assessments = results.get('retrieved_assessments', [])
-                    elif isinstance(results, list):
-                        assessments = results
-                    else:
-                        assessments = []
+                    assessments = recommender.search(search_query, k=10)
                     
                     if assessments:
                         st.markdown(f"### 📋 Found {len(assessments)} matching assessments")
