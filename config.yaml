@@ -1,0 +1,44 @@
+# SHL Assessment Recommendation System Configuration
+
+scraping:
+  shl_catalog_url: "https://www.shl.com/solutions/products/"
+  timeout: 30
+  retry_attempts: 3
+  delay_between_requests: 2
+
+data_storage:
+  raw_data_path: "./data/raw/shl_catalog.json"
+  processed_data_path: "./data/processed/assessments.csv"
+  vector_db_path: "./data/vector_db"
+
+embedding:
+  model_name: "sentence-transformers/all-MiniLM-L6-v2"
+  batch_size: 32
+  device: "cpu" # or "cuda" if GPU available
+
+retrieval:
+  top_k: 5
+  similarity_threshold: 0.3
+  collection_name: "shl_assessments"
+
+llm:
+  model: "gpt-3.5-turbo"
+  temperature: 0.3
+  max_tokens: 1000
+  system_prompt: |
+    You are an expert HR technology consultant specializing in SHL assessment products.
+    Your role is to recommend the most suitable SHL assessments for specific job roles
+    based on the provided assessment catalog. Only recommend assessments from the given
+    context. Provide clear, concise explanations for each recommendation.
+
+evaluation:
+  benchmark_roles_path: "./data/evaluation/benchmark_roles.json"
+  metrics:
+    - retrieval_precision
+    - recommendation_relevance
+    - explanation_quality
+
+ui:
+  title: "SHL Assessment Recommendation System"
+  page_icon: "🎯"
+  layout: "wide"

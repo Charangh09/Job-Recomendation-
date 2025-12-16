@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHL Assessment API - Test Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .api-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .api-info h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .api-info code {
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #d63384;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 14px 28px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .examples {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .example-btn {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .example-btn:hover {
+            background: #e0e0e0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .result-item {
+            background: white;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .result-item h4 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+        
+        .result-meta {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+        
+        .badge {
+            background: #e7f3ff;
+            color: #004085;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        
+        .score {
+            background: #d4edda;
+            color: #155724;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .json-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 SHL Assessment API</h1>
+        <p class="subtitle">Query-Based Assessment Recommendation System</p>
+        
+        <div class="api-info">
+            <h3>📡 API Endpoint Information</h3>
+            <p><strong>URL:</strong> <code>http://localhost:5000/recommend</code></p>
+            <p><strong>Method:</strong> GET or POST</p>
+            <p><strong>Input:</strong> Query text (job description, skills, requirements)</p>
+            <p><strong>Output:</strong> JSON with ranked assessment recommendations</p>
+        </div>
+        
+        <div class="input-group">
+            <label for="queryInput">Enter Your Query:</label>
+            <textarea id="queryInput" placeholder="e.g., I need a Java developer with strong problem-solving skills"></textarea>
+        </div>
+        
+        <div class="input-group">
+            <label>Quick Examples:</label>
+            <div class="examples">
+                <button class="example-btn" onclick="setQuery('I need a Java developer with strong problem-solving skills')">Java Developer</button>
+                <button class="example-btn" onclick="setQuery('Looking for a Senior Data Analyst with SQL and Excel expertise')">Data Analyst</button>
+                <button class="example-btn" onclick="setQuery('Need to hire graduates for entry-level sales positions')">Sales Position</button>
+                <button class="example-btn" onclick="setQuery('Software engineer with Python skills')">Python Engineer</button>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="limitInput">Number of Results (5-10):</label>
+            <input type="number" id="limitInput" value="5" min="5" max="10">
+        </div>
+        
+        <div class="button-group">
+            <button onclick="sendQuery()">🚀 Get Recommendations</button>
+            <button onclick="clearResults()">🗑️ Clear</button>
+        </div>
+        
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Fetching recommendations...</p>
+        </div>
+        
+        <div id="output"></div>
+    </div>
+    
+    <script>
+        function setQuery(text) {
+            document.getElementById('queryInput').value = text;
+        }
+        
+        async function sendQuery() {
+            const query = document.getElementById('queryInput').value.trim();
+            const limit = document.getElementById('limitInput').value;
+            const loading = document.getElementById('loading');
+            const output = document.getElementById('output');
+            
+            if (!query) {
+                output.innerHTML = '<div class="error">❌ Please enter a query</div>';
+                return;
+            }
+            
+            loading.style.display = 'block';
+            output.innerHTML = '';
+            
+            try {
+                // Try POST request first
+                const response = await fetch('http://localhost:5000/recommend', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query, limit: parseInt(limit) })
+                });
+                
+                const data = await response.json();
+                loading.style.display = 'none';
+                
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    output.innerHTML = `<div class="error">❌ ${data.error || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                output.innerHTML = `
+                    <div class="error">
+                        <h4>❌ Connection Error</h4>
+                        <p>${error.message}</p>
+                        <p style="margin-top: 10px;"><strong>Make sure the API server is running:</strong></p>
+                        <code style="background: white; padding: 8px; display: block; margin-top: 5px;">py api_simple.py</code>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayResults(data) {
+            const output = document.getElementById('output');
+            
+            let html = '<div class="tabs">';
+            html += '<div class="tab active" onclick="switchTab(0)">📋 Results</div>';
+            html += '<div class="tab" onclick="switchTab(1)">📄 JSON</div>';
+            html += '</div>';
+            
+            // Results tab
+            html += '<div class="tab-content active">';
+            html += '<div class="results">';
+            html += `<h3>✅ Found ${data.recommendation_count} Recommendations</h3>`;
+            html += `<p style="margin: 10px 0; color: #666;">Query: "${data.query}"</p>`;
+            
+            data.recommendations.forEach((rec, index) => {
+                html += `
+                    <div class="result-item">
+                        <h4>${index + 1}. ${rec.assessment_name}</h4>
+                        <p style="margin: 8px 0; color: #666;">${rec.description.substring(0, 200)}${rec.description.length > 200 ? '...' : ''}</p>
+                        <div class="result-meta">
+                            <span class="badge">${rec.category}</span>
+                            <span class="badge">⏱️ ${rec.duration}</span>
+                            <span class="score">Score: ${(rec.relevance_score * 100).toFixed(1)}%</span>
+                        </div>
+                        ${rec.assessment_url ? `<p style="margin-top: 10px;"><a href="${rec.assessment_url}" target="_blank" style="color: #667eea;">🔗 View Assessment</a></p>` : ''}
+                    </div>
+                `;
+            });
+            
+            html += '</div></div>';
+            
+            // JSON tab
+            html += '<div class="tab-content">';
+            html += '<div class="json-output"><pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+            html += '</div>';
+            
+            output.innerHTML = html;
+        }
+        
+        function switchTab(index) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach((tab, i) => {
+                if (i === index) {
+                    tab.classList.add('active');
+                    contents[i].classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                    contents[i].classList.remove('active');
+                }
+            });
+        }
+        
+        function clearResults() {
+            document.getElementById('output').innerHTML = '';
+            document.getElementById('queryInput').value = '';
+        }
+        
+        // Allow Enter to submit
+        document.getElementById('queryInput').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                sendQuery();
+            }
+        });
+    </script>
+</body>
+</html>
